@@ -16,3 +16,6 @@ target/
 
 # Windows
 Thumbs.db
+
+# Documentation/Notes
+PLAN.md
