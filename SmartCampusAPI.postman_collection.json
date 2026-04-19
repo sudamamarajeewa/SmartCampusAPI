@@ -1,0 +1,388 @@
+{
+  "info": {
+    "name": "Smart Campus API",
+    "description": "Complete test collection for the Smart Campus Sensor & Room Management API\nBase URL: http://localhost:8080/api/v1",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080/api/v1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Part 1 — Discovery",
+      "item": [
+        {
+          "name": "GET Discovery Endpoint",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}", "host": ["{{baseUrl}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Part 2 — Room Management",
+      "item": [
+        {
+          "name": "GET All Rooms",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/rooms", "host": ["{{baseUrl}}"], "path": ["rooms"] }
+          }
+        },
+        {
+          "name": "POST Create Room (LIB-301)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"LIB-301\",\n  \"name\": \"Library Quiet Study\",\n  \"capacity\": 50\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/rooms", "host": ["{{baseUrl}}"], "path": ["rooms"] }
+          }
+        },
+        {
+          "name": "POST Create Room (LAB-101)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"LAB-101\",\n  \"name\": \"Computer Science Lab\",\n  \"capacity\": 30\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/rooms", "host": ["{{baseUrl}}"], "path": ["rooms"] }
+          }
+        },
+        {
+          "name": "GET Room by ID (LIB-301)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/rooms/LIB-301", "host": ["{{baseUrl}}"], "path": ["rooms", "LIB-301"] }
+          }
+        },
+        {
+          "name": "GET Room by ID — 404 (not found)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/rooms/FAKE-999", "host": ["{{baseUrl}}"], "path": ["rooms", "FAKE-999"] }
+          }
+        },
+        {
+          "name": "POST Create Room — 400 Missing Name",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"capacity\": 20\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/rooms", "host": ["{{baseUrl}}"], "path": ["rooms"] }
+          }
+        },
+        {
+          "name": "DELETE Room (LAB-101) — no sensors, should succeed",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/rooms/LAB-101", "host": ["{{baseUrl}}"], "path": ["rooms", "LAB-101"] }
+          }
+        },
+        {
+          "name": "DELETE Room (LIB-301) — has sensors, expect 409",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/rooms/LIB-301", "host": ["{{baseUrl}}"], "path": ["rooms", "LIB-301"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Part 3 — Sensor Operations",
+      "item": [
+        {
+          "name": "GET All Sensors",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/sensors", "host": ["{{baseUrl}}"], "path": ["sensors"] }
+          }
+        },
+        {
+          "name": "GET Sensors Filtered by Type (CO2)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/sensors?type=CO2",
+              "host": ["{{baseUrl}}"],
+              "path": ["sensors"],
+              "query": [{ "key": "type", "value": "CO2" }]
+            }
+          }
+        },
+        {
+          "name": "GET Sensors Filtered by Type (Temperature)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/sensors?type=Temperature",
+              "host": ["{{baseUrl}}"],
+              "path": ["sensors"],
+              "query": [{ "key": "type", "value": "Temperature" }]
+            }
+          }
+        },
+        {
+          "name": "POST Create Sensor — CO2 (valid roomId)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"CO2-001\",\n  \"type\": \"CO2\",\n  \"status\": \"ACTIVE\",\n  \"roomId\": \"LIB-301\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/sensors", "host": ["{{baseUrl}}"], "path": ["sensors"] }
+          }
+        },
+        {
+          "name": "POST Create Sensor — Temperature (valid roomId)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"TEMP-001\",\n  \"type\": \"Temperature\",\n  \"status\": \"ACTIVE\",\n  \"roomId\": \"LIB-301\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/sensors", "host": ["{{baseUrl}}"], "path": ["sensors"] }
+          }
+        },
+        {
+          "name": "POST Create Sensor — MAINTENANCE status",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"CO2-MAINT\",\n  \"type\": \"CO2\",\n  \"status\": \"MAINTENANCE\",\n  \"roomId\": \"LIB-301\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/sensors", "host": ["{{baseUrl}}"], "path": ["sensors"] }
+          }
+        },
+        {
+          "name": "POST Create Sensor — 422 Invalid roomId",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"Occupancy\",\n  \"roomId\": \"GHOST-999\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/sensors", "host": ["{{baseUrl}}"], "path": ["sensors"] }
+          }
+        },
+        {
+          "name": "GET Sensor by ID (CO2-001)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/sensors/CO2-001", "host": ["{{baseUrl}}"], "path": ["sensors", "CO2-001"] }
+          }
+        },
+        {
+          "name": "POST Create Sensor — 415 Wrong Content-Type",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "text/plain" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "type=CO2&roomId=LIB-301"
+            },
+            "url": { "raw": "{{baseUrl}}/sensors", "host": ["{{baseUrl}}"], "path": ["sensors"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Part 4 — Sensor Readings (Sub-Resource)",
+      "item": [
+        {
+          "name": "GET Readings for CO2-001 (empty initially)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/sensors/CO2-001/readings", "host": ["{{baseUrl}}"], "path": ["sensors", "CO2-001", "readings"] }
+          }
+        },
+        {
+          "name": "POST Add Reading to CO2-001",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"value\": 845.3\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/sensors/CO2-001/readings", "host": ["{{baseUrl}}"], "path": ["sensors", "CO2-001", "readings"] }
+          }
+        },
+        {
+          "name": "POST Add Another Reading to CO2-001",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"value\": 912.7\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/sensors/CO2-001/readings", "host": ["{{baseUrl}}"], "path": ["sensors", "CO2-001", "readings"] }
+          }
+        },
+        {
+          "name": "GET Readings for CO2-001 (should have 2 now)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/sensors/CO2-001/readings", "host": ["{{baseUrl}}"], "path": ["sensors", "CO2-001", "readings"] }
+          }
+        },
+        {
+          "name": "GET CO2-001 — verify currentValue updated to 912.7",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/sensors/CO2-001", "host": ["{{baseUrl}}"], "path": ["sensors", "CO2-001"] }
+          }
+        },
+        {
+          "name": "POST Reading to MAINTENANCE Sensor — expect 403",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"value\": 500.0\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/sensors/CO2-MAINT/readings", "host": ["{{baseUrl}}"], "path": ["sensors", "CO2-MAINT", "readings"] }
+          }
+        },
+        {
+          "name": "GET Readings for Unknown Sensor — expect 404",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/sensors/GHOST-001/readings", "host": ["{{baseUrl}}"], "path": ["sensors", "GHOST-001", "readings"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Part 5 — Error Handling",
+      "item": [
+        {
+          "name": "409 — DELETE Room with Sensors (LIB-301)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/rooms/LIB-301", "host": ["{{baseUrl}}"], "path": ["rooms", "LIB-301"] }
+          }
+        },
+        {
+          "name": "422 — POST Sensor with Non-Existent roomId",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"Occupancy\",\n  \"roomId\": \"NO-SUCH-ROOM\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/sensors", "host": ["{{baseUrl}}"], "path": ["sensors"] }
+          }
+        },
+        {
+          "name": "403 — POST Reading to MAINTENANCE Sensor",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"value\": 100.0\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/sensors/CO2-MAINT/readings", "host": ["{{baseUrl}}"], "path": ["sensors", "CO2-MAINT", "readings"] }
+          }
+        },
+        {
+          "name": "404 — GET Non-Existent Room",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/rooms/DOES-NOT-EXIST", "host": ["{{baseUrl}}"], "path": ["rooms", "DOES-NOT-EXIST"] }
+          }
+        },
+        {
+          "name": "415 — POST Sensor with text/plain (Wrong Content-Type)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "text/plain" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "type=CO2&roomId=LIB-301"
+            },
+            "url": { "raw": "{{baseUrl}}/sensors", "host": ["{{baseUrl}}"], "path": ["sensors"] }
+          }
+        }
+      ]
+    }
+  ]
+}
