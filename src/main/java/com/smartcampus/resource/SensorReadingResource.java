@@ -90,9 +90,9 @@ public class SensorReadingResource {
             return Response.status(Response.Status.NOT_FOUND).entity(err).build();
         }
 
-        // ── 2. State constraint: block MAINTENANCE sensors ───────────────────
+        // ── 2. State constraint: block readings if sensor is NOT ACTIVE ──────────
         // Throws SensorUnavailableException → mapped to 403 Forbidden
-        if ("MAINTENANCE".equalsIgnoreCase(sensor.getStatus())) {
+        if (!"ACTIVE".equalsIgnoreCase(sensor.getStatus())) {
             throw new SensorUnavailableException(sensorId, sensor.getStatus());
         }
 

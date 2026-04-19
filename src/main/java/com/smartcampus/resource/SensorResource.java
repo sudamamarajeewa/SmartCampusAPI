@@ -118,9 +118,9 @@ public class SensorResource {
 
         // Validate status value
         String status = sensor.getStatus().toUpperCase();
-        if (!status.equals("ACTIVE") && !status.equals("MAINTENANCE") && !status.equals("OFFLINE")) {
+        if (!status.equals("ACTIVE") && !status.equals("MAINTENANCE") && !status.equals("OFFLINE") && !status.equals("INACTIVE")) {
             ApiError err = new ApiError(400, "Bad Request",
-                    "Field 'status' must be one of: ACTIVE, MAINTENANCE, OFFLINE.");
+                    "Field 'status' must be one of: ACTIVE, MAINTENANCE, OFFLINE, INACTIVE.");
             return Response.status(Response.Status.BAD_REQUEST).entity(err).build();
         }
         sensor.setStatus(status);
@@ -152,6 +152,71 @@ public class SensorResource {
         }
 
         return Response.ok(sensor).build();
+    }
+
+    // ─── PUT /api/v1/sensors/{sensorId} ──────────────────────────────────────
+    /**
+     * Updates an existing sensor's details (e.g. status).
+     * Returns 404 if no sensor with that ID exists.
+     */
+    @PUT
+    @Path("/{sensorId}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response updateSensor(@PathParam("sensorId") String sensorId, Sensor updatedSensor) {
+        Sensor existingSensor = DataStore.getSensor(sensorId);
+
+        if (existingSensor == null) {
+            ApiError err = new ApiError(404, "Not Found",
+                    "No sensor found with id '" + sensorId + "'.");
+            return Response.status(Response.Status.NOT_FOUND).entity(err).build();
+        }
+
+        // Only update fields that might change — type and roomId generally don't change,
+        // but status definitely does.
+        if (updatedSensor.getStatus() != null && !updatedSensor.getStatus().trim().isEmpty()) {
+            String newStatus = updatedSensor.getStatus().toUpperCase();
+            if (!newStatus.equals("ACTIVE") && !newStatus.equals("MAINTENANCE") && !newStatus.equals("OFFLINE") && !newStatus.equals("INACTIVE")) {
+                ApiError err = new ApiError(400, "Bad Request",
+                        "Field 'status' must be one of: ACTIVE, MAINTENANCE, OFFLINE, INACTIVE.");
+                return Response.status(Response.Status.BAD_REQUEST).entity(err).build();
+            }
+            existingSensor.setStatus(newStatus);
+        }
+        
+        // Optional: Can update type
+        if (updatedSensor.getType() != null && !updatedSensor.getType().trim().isEmpty()) {
+            existingSensor.setType(updatedSensor.getType());
+        }
+
+        return Response.ok(existingSensor).build();
+    }
+
+    // ─── DELETE /api/v1/sensors/{sensorId} ───────────────────────────────────
+    /**
+     * Deletes a sensor from the system.
+     */
+    @DELETE
+    @Path("/{sensorId}")
+    public Response deleteSensor(@PathParam("sensorId") String sensorId) {
+        Sensor sensor = DataStore.getSensor(sensorId);
+
+        if (sensor == null) {
+            ApiError err = new ApiError(404, "Not Found",
+                    "No sensor found with id '" + sensorId + "'. It may have already been deleted.");
+            return Response.status(Response.Status.NOT_FOUND).entity(err).build();
+        }
+
+        // Remove the sensor from DataStore
+        DataStore.removeSensor(sensorId);
+
+        // Also remove its reference from the parent Room
+        Room parentRoom = DataStore.getRoom(sensor.getRoomId());
+        if (parentRoom != null) {
+            parentRoom.removeSensorId(sensorId);
+        }
+
+        return Response.ok(new ApiError(200, "OK",
+                "Sensor '" + sensorId + "' has been successfully deleted.")).build();
     }
 
     // ─── Sub-resource Locator: /api/v1/sensors/{sensorId}/readings ───────────

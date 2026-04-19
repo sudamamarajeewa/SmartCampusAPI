@@ -28,6 +28,22 @@ public class GenericExceptionMapper implements ExceptionMapper<Throwable> {
 
     @Override
     public Response toResponse(Throwable exception) {
+        // If it's a built-in JAX-RS exception (e.g. 404 Not Found, 405 Method Not Allowed),
+        // keep its intended status code rather than forcing a 500.
+        if (exception instanceof javax.ws.rs.WebApplicationException) {
+            javax.ws.rs.WebApplicationException webEx = (javax.ws.rs.WebApplicationException) exception;
+            Response r = webEx.getResponse();
+            ApiError error = new ApiError(
+                    r.getStatus(),
+                    r.getStatusInfo().getReasonPhrase(),
+                    exception.getMessage() != null ? exception.getMessage() : "HTTP Error " + r.getStatus()
+            );
+            return Response.status(r.getStatus())
+                    .entity(error)
+                    .type(MediaType.APPLICATION_JSON)
+                    .build();
+        }
+
         // Log the full stack trace server-side for debugging
         LOGGER.log(Level.SEVERE,
                 "Unhandled exception caught by global safety net: " + exception.getMessage(),
