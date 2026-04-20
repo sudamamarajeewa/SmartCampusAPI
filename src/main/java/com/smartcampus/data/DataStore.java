@@ -10,12 +10,13 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Singleton in-memory data store for the Smart Campus API.
+ * Uses ConcurrentHashMap to ensure thread-safe access across concurrent
+ * requests.
+ * In JAX-RS, resource classes are instantiated per request by default, but they
+ * all
+ * share these static maps so all data persists for the lifetime of the server.
  *
- * Uses ConcurrentHashMap to ensure thread-safe access across concurrent requests.
- * In JAX-RS, resource classes are instantiated per-request by default, but they all
- * share these static maps — so all data persists for the lifetime of the server.
- *
- * NOTE: Data is stored in memory only. All data is lost if the server restarts.
+ * Data is stored in memory only. All data is lost if the server restarts.
  */
 public class DataStore {
 
@@ -26,11 +27,11 @@ public class DataStore {
     private static final ConcurrentHashMap<String, Sensor> sensors = new ConcurrentHashMap<>();
 
     // ─── Sensor Readings — keyed by sensorId, each value is a list of readings
-    private static final ConcurrentHashMap<String, List<SensorReading>> sensorReadings
-            = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, List<SensorReading>> sensorReadings = new ConcurrentHashMap<>();
 
     // Private constructor — this is a utility class (all static), not instantiated
-    private DataStore() {}
+    private DataStore() {
+    }
 
     // ─── Room Operations ──────────────────────────────────────────────────────
 
