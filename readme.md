@@ -2,10 +2,10 @@
 
 ## 1. Overview of API Design
 The Smart Campus API is built using JAX-RS (Jersey) to provide a RESTful interface for managing campus facilities. The architecture is built around three core resource models: **Rooms**, **Sensors**, and **Sensor Readings**. 
-* **Resource Hierarchy:** The API follows RESTful principles with a clear hierarchy. Operations on rooms occur at `/api/v1/rooms`, whilst operations on sensors occur at `/api/v1/sensors`. 
-* **Sub-Resource Locator Pattern:** To manage historical data, readings are nested inside sensors using a sub-resource locator pattern at `/api/v1/sensors/{sensorId}/readings`.
-* **State & Data Management:** Data is managed in-memory using a thread-safe `ConcurrentHashMap` Singleton (`DataStore`), preventing race conditions in a concurrent Tomcat environment.
-* **Error Handling:** The API uses comprehensive custom exception mappers to ensure no internal Java stack traces are leaked, mapping logical errors to proper HTTP semantic codes (e.g. `404 Not Found`, `409 Conflict`, `422 Unprocessable Entity`, `403 Forbidden`). 
+* **Resource Hierarchy:** The API follows RESTful principles with a clear hierarchy. Operations on rooms occur at /api/v1/rooms, whilst operations on sensors occur at /api/v1/sensors. 
+* **Sub-Resource Locator Pattern:** To manage historical data, readings are nested inside sensors using a sub-resource locator pattern at /api/v1/sensors/{sensorId}/readings.
+* **State & Data Management:** Data is managed in-memory using a thread-safe ConcurrentHashMap Singleton (DataStore), preventing race conditions in a concurrent Tomcat environment.
+* **Error Handling:** The API uses comprehensive custom exception mappers to ensure no internal Java stack traces are leaked, mapping logical errors to proper HTTP semantic codes (e.g. 404 Not Found, 409 Conflict, 422 Unprocessable Entity, 403 Forbidden). 
 
 ---
 
@@ -23,29 +23,29 @@ The Smart Campus API is built using JAX-RS (Jersey) to provide a RESTful interfa
    cd SmartCampusAPI
    ```
 2. **Compile and package the project using Maven:**
-   Run the following command in the project root to create the `.war` deployment file.
+   Run the following command in the project root to create the .war deployment file.
    ```bash
    mvn clean package
    ```
-   *(Note: This creates a file named `ROOT.war` in the `target/` directory.)*
+   *(Note: This creates a file named ROOT.war in the target/ directory.)*
 3. **Deploy to Apache Tomcat:**
-   Copy the `ROOT.war` file from the `target/` directory and paste it into Tomcat's `webapps/` directory.
+   Copy the ROOT.war file from the target/ directory and paste it into Tomcat's webapps/ directory.
    ```bash
    cp target/ROOT.war /path/to/tomcat/webapps/ROOT.war
    ```
 4. **Launch the server:**
-   Navigate to your Tomcat `bin/` directory and execute the startup script:
-   * **Windows:** double-click `startup.bat` (or run `startup.bat` from terminal)
-   * **Linux/Mac:** `./startup.sh`
+   Navigate to your Tomcat bin/ directory and execute the startup script:
+   * **Windows:** double-click startup.bat (or run startup.bat from terminal)
+   * **Linux/Mac:** ./startup.sh
 5. **Verify the deployment:**
    Once Tomcat is running, the API will be accessible locally. You can verify it is active by visiting the discovery endpoint:
-   `http://localhost:8080/api/v1`
+   http://localhost:8080/api/v1
 
 ---
 
 ## 3. Sample curl Commands
 
-Here are sample `curl` commands demonstrating successful interactions with the different parts of the API:
+Here are sample curl commands demonstrating successful interactions with the different parts of the API:
 
 **1. Create a new Room (POST)**
 ```bash
@@ -86,7 +86,7 @@ curl -X DELETE http://localhost:8080/api/v1/rooms/LIB-301 \
 
 **Part 1: Service Architecture & Setup**
 **1. Default lifecycle of a JAX-RS resource class and its impact on in-memory data:**
-By default, JAX-RS operates on a "per-request" lifecycle, meaning a new instance of the resource class is instantiated for every incoming HTTP request. If data structures (like maps or lists) were managed as standard instance variables inside the resource class, that data would be lost every time the request completed. To prevent data loss and safely manage state, I implemented a Singleton `DataStore` class using `static` declarations. I specifically chose `ConcurrentHashMap` for the collections to prevent race conditions and ensure thread-safe synchronization across concurrent Tomcat requests.
+By default, JAX-RS operates on a "per-request" lifecycle, meaning a new instance of the resource class is instantiated for every incoming HTTP request. If data structures (like maps or lists) were managed as standard instance variables inside the resource class, that data would be lost every time the request completed. To prevent data loss and safely manage state, I implemented a Singleton DataStore class using static declarations. I specifically chose ConcurrentHashMap for the collections to prevent race conditions and ensure thread-safe synchronization across concurrent Tomcat requests.
 
 **2. The benefit of Hypermedia (HATEOAS) for client developers:**
 HATEOAS (Hypermedia As The Engine Of Application State) allows a client to dynamically navigate an API by following links provided inside the JSON responses, rather than manually hardcoding URL structures based on static documentation. This benefits developers by heavily decoupling the client side from the server logic—if the server changes its internal routing structure in the future, the client naturally adapts without breaking, as it relies on the provided runtime links.
@@ -96,7 +96,7 @@ HATEOAS (Hypermedia As The Engine Of Application State) allows a client to dynam
 Returning only IDs radically minimizes the payload size and conserves network bandwidth, which is excellent for raw speed but forces the client to make multiple additional round-trip requests to fetch the actual metadata for each room (the N+1 problem). Returning full room objects simplifies client-side processing since only a single request is required to render the application interface, but at the cost of consuming more bandwidth if the client application never intends to display the deeper metadata.
 
 **2. Is the DELETE operation idempotent in this implementation?**
-Strictly speaking, the DELETE implementation behaves slightly differently on subsequent calls. The first `DELETE` request for a valid room removes it and understandably returns a `200 OK`. If the client mistakenly sends the exact same `DELETE` request again, the system will return a `404 Not Found` because the entity no longer exists. While a pure idempotent DELETE would return `200 OK` endlessly, returning `404` is a deliberate, pragmatic design choice that guarantees the server state does not change after the first call, whilst clearly informing the client the resource is gone.
+Strictly speaking, the DELETE implementation behaves slightly differently on subsequent calls. The first DELETE request for a valid room removes it and understandably returns a 200 OK. If the client mistakenly sends the exact same DELETE request again, the system will return a 404 Not Found because the entity no longer exists. While a pure idempotent DELETE would return 200 OK endlessly, returning 404 is a deliberate, pragmatic design choice that guarantees the server state does not change after the first call, whilst clearly informing the client the resource is gone.
 
 **Part 3: Sensor Operations & Linking**
 **1. Technical consequences of sending data in an incorrect format (text/plain vs application/json):**
@@ -117,4 +117,4 @@ A `404 Not Found` implies that the target URL endpoint does not exist. However, 
 Exposing a stack trace allows external API consumers to directly view the internal file structures, class names, framework versions (e.g. Jersey, Tomcat), and database logic. From a cybersecurity perspective, this is lethal; attackers can actively weaponize this footprinting data to search for known CVEs vulnerabilities specifically targeting the revealed technology stack, dramatically simplifying the process of exploiting the server. 
 
 **3. The advantage of JAX-RS filters for cross-cutting logging concerns:**
-Cross-cutting concerns like observability apply identically globally across every single controller. By leveraging `ContainerRequestFilter` and `ContainerResponseFilter`, we ensure 100% logging coverage identically across all endpoints without writing duplicated `Logger.info()` statements inside individual methods. It heavily adheres to DRY (Don't Repeat Yourself) principles and guarantees an engineer won't accidentally forget to add logging when building new API routes in the future.
+Cross-cutting concerns like observability apply identically globally across every single controller. By leveraging ContainerRequestFilter` and ContainerResponseFilter, we ensure 100% logging coverage identically across all endpoints without writing duplicated `Logger.info()` statements inside individual methods. It heavily adheres to DRY (Don't Repeat Yourself) principles and guarantees an engineer won't accidentally forget to add logging when building new API routes in the future.
