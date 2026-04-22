@@ -16,17 +16,18 @@ import java.util.UUID;
  * Room Resource — manages the /api/v1/rooms collection.
  *
  * Endpoints:
- *   GET    /api/v1/rooms           → list all rooms
- *   POST   /api/v1/rooms           → create a new room
- *   GET    /api/v1/rooms/{roomId}  → get a specific room
- *   DELETE /api/v1/rooms/{roomId}  → delete a room (blocked if sensors are assigned)
+ * GET /api/v1/rooms - list all rooms
+ * POST /api/v1/rooms - create a new room
+ * GET /api/v1/rooms/{roomId} - get a specific room
+ * DELETE /api/v1/rooms/{roomId} - delete a room (blocked if sensors are
+ * assigned)
  */
 @Path("/rooms")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class RoomResource {
 
-    // ─── GET /api/v1/rooms ────────────────────────────────────────────────────
+    // GET /api/v1/rooms
     /**
      * Returns a list of all rooms currently registered in the system.
      */
@@ -36,7 +37,7 @@ public class RoomResource {
         return Response.ok(roomList).build();
     }
 
-    // ─── POST /api/v1/rooms ───────────────────────────────────────────────────
+    // POST /api/v1/rooms
     /**
      * Creates a new room.
      * - If no id is provided in the body, one is auto-generated (UUID).
@@ -82,7 +83,7 @@ public class RoomResource {
         return Response.status(Response.Status.CREATED).entity(room).build();
     }
 
-    // ─── GET /api/v1/rooms/{roomId} ───────────────────────────────────────────
+    // GET /api/v1/rooms/{roomId}
     /**
      * Returns the full details of a single room by its ID.
      * Returns 404 if no room with that ID exists.
@@ -101,20 +102,22 @@ public class RoomResource {
         return Response.ok(room).build();
     }
 
-    // ─── DELETE /api/v1/rooms/{roomId} ────────────────────────────────────────
+    // DELETE /api/v1/rooms/{roomId}
     /**
      * Deletes a room from the system.
      *
      * Business Logic Constraint:
-     *   A room cannot be deleted if it still has sensors assigned to it.
-     *   Throws RoomNotEmptyException (→ 409 Conflict) if sensors are present.
+     * A room cannot be deleted if it still has sensors assigned to it.
+     * Throws RoomNotEmptyException (→ 409 Conflict) if sensors are present.
      *
      * Idempotency note:
-     *   The first DELETE succeeds (200 OK).
-     *   Subsequent DELETE calls on the same ID return 404 Not Found,
-     *   meaning this operation is NOT strictly idempotent (per REST spec it ideally would be),
-     *   but in this implementation we deliberately retuern 404 on repeat calls to give
-     *   the client clear feedback that the resource no longer exists.
+     * The first DELETE succeeds (200 OK).
+     * Subsequent DELETE calls on the same ID return 404 Not Found,
+     * meaning this operation is NOT strictly idempotent (per REST spec it ideally
+     * would be),
+     * but in this implementation we deliberately retuern 404 on repeat calls to
+     * give
+     * the client clear feedback that the resource no longer exists.
      */
     @DELETE
     @Path("/{roomId}")
@@ -128,7 +131,8 @@ public class RoomResource {
             return Response.status(Response.Status.NOT_FOUND).entity(err).build();
         }
 
-        // 409 if room still has sensors — throw custom exception (mapped by RoomNotEmptyExceptionMapper)
+        // 409 if room still has sensors — throw custom exception (mapped by
+        // RoomNotEmptyExceptionMapper)
         if (room.getSensorIds() != null && !room.getSensorIds().isEmpty()) {
             throw new RoomNotEmptyException(roomId);
         }

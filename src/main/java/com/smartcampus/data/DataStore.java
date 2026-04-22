@@ -20,20 +20,20 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class DataStore {
 
-    // ─── Rooms ───────────────────────────────────────────────────────────────
+    // Rooms
     private static final ConcurrentHashMap<String, Room> rooms = new ConcurrentHashMap<>();
 
-    // ─── Sensors ─────────────────────────────────────────────────────────────
+    // Sensors
     private static final ConcurrentHashMap<String, Sensor> sensors = new ConcurrentHashMap<>();
 
-    // ─── Sensor Readings — keyed by sensorId, each value is a list of readings
+    // Sensor Readings — keyed by sensorId, each value is a list of readings
     private static final ConcurrentHashMap<String, List<SensorReading>> sensorReadings = new ConcurrentHashMap<>();
 
     // Private constructor — this is a utility class (all static), not instantiated
     private DataStore() {
     }
 
-    // ─── Room Operations ──────────────────────────────────────────────────────
+    // Room Operations
 
     public static ConcurrentHashMap<String, Room> getRooms() {
         return rooms;
@@ -55,7 +55,7 @@ public class DataStore {
         return rooms.remove(id);
     }
 
-    // ─── Sensor Operations ────────────────────────────────────────────────────
+    // Sensor Operations
 
     public static ConcurrentHashMap<String, Sensor> getSensors() {
         return sensors;
@@ -77,7 +77,7 @@ public class DataStore {
         return sensors.remove(id);
     }
 
-    // ─── Sensor Reading Operations ────────────────────────────────────────────
+    // Sensor Reading Operations
 
     public static List<SensorReading> getReadingsForSensor(String sensorId) {
         // Return existing list or create a new one for this sensor
