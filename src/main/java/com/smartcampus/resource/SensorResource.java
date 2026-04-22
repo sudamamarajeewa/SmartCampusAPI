@@ -18,22 +18,22 @@ import java.util.stream.Collectors;
  * Sensor Resource — manages the /api/v1/sensors collection.
  *
  * Endpoints:
- *   GET  /api/v1/sensors            → list all sensors (optionally filtered by ?type=)
- *   POST /api/v1/sensors            → register a new sensor (roomId must exist)
- *   GET  /api/v1/sensors/{sensorId} → get a specific sensor
+ * GET /api/v1/sensors - list all sensors (optionally filtered by ?type=)
+ * POST /api/v1/sensors - register a new sensor (roomId must exist)
+ * GET /api/v1/sensors/{sensorId} - get a specific sensor
  *
  * Sub-resource locator (Part 4):
- *   ANY  /api/v1/sensors/{sensorId}/readings → delegates to SensorReadingResource
+ * ANY /api/v1/sensors/{sensorId}/readings - delegates to SensorReadingResource
  */
 @Path("/sensors")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class SensorResource {
 
-    // ─── GET /api/v1/sensors ─────────────────────────────────────────────────
+    // GET /api/v1/sensors
     /**
      * Returns all sensors in the system.
-     * Supports optional filtering via ?type=  e.g. GET /api/v1/sensors?type=CO2
+     * Supports optional filtering via ?type= e.g. GET /api/v1/sensors?type=CO2
      *
      * Using @QueryParam for filtering (not path-based e.g. /sensors/type/CO2)
      * because query parameters are the standard REST convention for optional
@@ -48,29 +48,31 @@ public class SensorResource {
         if (type != null && !type.trim().isEmpty()) {
             sensorList = sensorList.stream()
                     .filter(s -> s.getType() != null &&
-                                 s.getType().equalsIgnoreCase(type.trim()))
+                            s.getType().equalsIgnoreCase(type.trim()))
                     .collect(Collectors.toList());
         }
 
         return Response.ok(sensorList).build();
     }
 
-    // ─── POST /api/v1/sensors ────────────────────────────────────────────────
+    // POST /api/v1/sensors
     /**
      * Registers a new sensor.
      *
      * Validation rules:
-     *  - Body must not be null
-     *  - 'type' is required
-     *  - 'roomId' is required AND must reference an existing room
-     *  - If roomId does not exist → throws LinkedResourceNotFoundException (422)
+     * - Body must not be null
+     * - 'type' is required
+     * - 'roomId' is required AND must reference an existing room
+     * - If roomId does not exist - throws LinkedResourceNotFoundException (422)
      *
      * Side effects on success:
-     *  - Sensor is added to DataStore
-     *  - Sensor's ID is appended to the parent Room's sensorIds list
+     * - Sensor is added to DataStore
+     * - Sensor's ID is appended to the parent Room's sensorIds list
      *
-     * @Consumes(APPLICATION_JSON) means if client sends text/plain or application/xml,
-     * JAX-RS automatically returns 415 Unsupported Media Type before this method is called.
+     * @Consumes(APPLICATION_JSON) means if client sends text/plain or
+     *                             application/xml,
+     *                             JAX-RS automatically returns 415 Unsupported
+     *                             Media Type before this method is called.
      */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -83,7 +85,8 @@ public class SensorResource {
 
         // Validate required fields
         if (sensor.getType() == null || sensor.getType().trim().isEmpty()) {
-            ApiError err = new ApiError(400, "Bad Request", "Field 'type' is required (e.g. Temperature, CO2, Occupancy).");
+            ApiError err = new ApiError(400, "Bad Request",
+                    "Field 'type' is required (e.g. Temperature, CO2, Occupancy).");
             return Response.status(Response.Status.BAD_REQUEST).entity(err).build();
         }
 
@@ -92,10 +95,11 @@ public class SensorResource {
             return Response.status(Response.Status.BAD_REQUEST).entity(err).build();
         }
 
-        // ── Key integrity check: roomId must exist ──────────────────────────
+        // Key integrity check: roomId must exist
         Room parentRoom = DataStore.getRoom(sensor.getRoomId());
         if (parentRoom == null) {
-            // 422 Unprocessable Entity — JSON is valid, but the referenced resource doesn't exist
+            // 422 Unprocessable Entity — JSON is valid, but the referenced resource doesn't
+            // exist
             throw new LinkedResourceNotFoundException("roomId", sensor.getRoomId());
         }
 
@@ -118,24 +122,25 @@ public class SensorResource {
 
         // Validate status value
         String status = sensor.getStatus().toUpperCase();
-        if (!status.equals("ACTIVE") && !status.equals("MAINTENANCE") && !status.equals("OFFLINE") && !status.equals("INACTIVE")) {
+        if (!status.equals("ACTIVE") && !status.equals("MAINTENANCE") && !status.equals("OFFLINE")
+                && !status.equals("INACTIVE")) {
             ApiError err = new ApiError(400, "Bad Request",
                     "Field 'status' must be one of: ACTIVE, MAINTENANCE, OFFLINE, INACTIVE.");
             return Response.status(Response.Status.BAD_REQUEST).entity(err).build();
         }
         sensor.setStatus(status);
 
-        // ── Persist the sensor ──────────────────────────────────────────────
+        // Persist the sensor
         DataStore.putSensor(sensor);
 
-        // ── Side effect: link sensor to its parent room ─────────────────────
+        // Side effect: link sensor to its parent room
         parentRoom.addSensorId(sensor.getId());
 
         // 201 Created with the new sensor in the body
         return Response.status(Response.Status.CREATED).entity(sensor).build();
     }
 
-    // ─── GET /api/v1/sensors/{sensorId} ──────────────────────────────────────
+    // GET /api/v1/sensors/{sensorId}
     /**
      * Returns detailed info for a specific sensor.
      * Returns 404 if no sensor with that ID exists.
@@ -154,7 +159,7 @@ public class SensorResource {
         return Response.ok(sensor).build();
     }
 
-    // ─── PUT /api/v1/sensors/{sensorId} ──────────────────────────────────────
+    // PUT /api/v1/sensors/{sensorId}
     /**
      * Updates an existing sensor's details (e.g. status).
      * Returns 404 if no sensor with that ID exists.
@@ -171,18 +176,20 @@ public class SensorResource {
             return Response.status(Response.Status.NOT_FOUND).entity(err).build();
         }
 
-        // Only update fields that might change — type and roomId generally don't change,
+        // Only update fields that might change — type and roomId generally don't
+        // change,
         // but status definitely does.
         if (updatedSensor.getStatus() != null && !updatedSensor.getStatus().trim().isEmpty()) {
             String newStatus = updatedSensor.getStatus().toUpperCase();
-            if (!newStatus.equals("ACTIVE") && !newStatus.equals("MAINTENANCE") && !newStatus.equals("OFFLINE") && !newStatus.equals("INACTIVE")) {
+            if (!newStatus.equals("ACTIVE") && !newStatus.equals("MAINTENANCE") && !newStatus.equals("OFFLINE")
+                    && !newStatus.equals("INACTIVE")) {
                 ApiError err = new ApiError(400, "Bad Request",
                         "Field 'status' must be one of: ACTIVE, MAINTENANCE, OFFLINE, INACTIVE.");
                 return Response.status(Response.Status.BAD_REQUEST).entity(err).build();
             }
             existingSensor.setStatus(newStatus);
         }
-        
+
         // Optional: Can update type
         if (updatedSensor.getType() != null && !updatedSensor.getType().trim().isEmpty()) {
             existingSensor.setType(updatedSensor.getType());
@@ -191,7 +198,7 @@ public class SensorResource {
         return Response.ok(existingSensor).build();
     }
 
-    // ─── DELETE /api/v1/sensors/{sensorId} ───────────────────────────────────
+    // DELETE /api/v1/sensors/{sensorId}
     /**
      * Deletes a sensor from the system.
      */
@@ -219,12 +226,13 @@ public class SensorResource {
                 "Sensor '" + sensorId + "' has been successfully deleted.")).build();
     }
 
-    // ─── Sub-resource Locator: /api/v1/sensors/{sensorId}/readings ───────────
+    // Sub-resource Locator: /api/v1/sensors/{sensorId}/readings
     /**
      * Delegates all /readings sub-paths to SensorReadingResource.
      *
      * This is the Sub-Resource Locator pattern (Part 4).
-     * Instead of defining every readings path here, we hand off to a dedicated class,
+     * Instead of defining every readings path here, we hand off to a dedicated
+     * class,
      * keeping this controller focused and clean.
      *
      * Note: No HTTP method annotation — JAX-RS uses this purely as a locator.
