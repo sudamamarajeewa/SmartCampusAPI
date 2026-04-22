@@ -11,7 +11,8 @@ public class ApiError {
     private String message;
     private long timestamp;
 
-    public ApiError() {}
+    public ApiError() {
+    }
 
     public ApiError(int status, String error, String message) {
         this.status = status;
@@ -21,14 +22,36 @@ public class ApiError {
     }
 
     // Getters
-    public int getStatus()       { return status; }
-    public String getError()     { return error; }
-    public String getMessage()   { return message; }
-    public long getTimestamp()   { return timestamp; }
+    public int getStatus() {
+        return status;
+    }
+
+    public String getError() {
+        return error;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public long getTimestamp() {
+        return timestamp;
+    }
 
     // Setters
-    public void setStatus(int status)       { this.status = status; }
-    public void setError(String error)      { this.error = error; }
-    public void setMessage(String message)  { this.message = message; }
-    public void setTimestamp(long timestamp){ this.timestamp = timestamp; }
+    public void setStatus(int status) {
+        this.status = status;
+    }
+
+    public void setError(String error) {
+        this.error = error;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
+    }
 }
